@@ -36,7 +36,7 @@ Storage.prototype.clear = new Proxy(Storage.prototype.clear, {
 });
 
 const saveFileKey = 'goobooSavefile';
-const getSaveFile = () => fetch('/save')
+const getSaveFile = async () => fetch('/save')
   .then(res => res.text())
   .then(save => {
     if (save) {
@@ -49,7 +49,7 @@ const getSaveFile = () => fetch('/save')
   })
   .catch(err => console.error(err));
 
-const updateSaveFile = () => fetch(
+const updateSaveFile = async () => fetch(
     '/save', 
     {
       method: 'POST',
@@ -59,14 +59,23 @@ const updateSaveFile = () => fetch(
   .catch(err => console.error(err));
 
 
-window.onload = getSaveFile;
+window.onload = async () => await getSaveFile;
 
-window.onstorage = ({ key, newValue, oldValue, storageArea }) => {
+window.onstorage = async ({ key, newValue, oldValue, storageArea }) => {
   if (key === saveFileKey && newValue !== oldValue) {
-    updateSaveFile();
+    await updateSaveFile();
   }
 };
 
-window.onbeforeunload = () => {
-  updateSaveFile();
+window.onbeforeunload = async () => {
+  const vue = document.getElementById('app').__vue__;
+  const header = vue.$children.find(c => c.$vnode.tag.includes('v-app-bar'));
+  const menu = header.$children.filter(c => c.$vnode.tag.includes('v-menu'))[1];
+  const toggleBtn = menu.$children[0];
+  toggleBtn.$el.dispatchEvent(new Event('mouseenter'));
+  setTimeout(() => {	
+	  const saveBtn = menu.$children[1].$children[0].$children[0].$el;
+	  saveBtn.click();
+  }, 100);
+  await updateSaveFile();
 };
