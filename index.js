@@ -45,6 +45,7 @@ const proxy = createProxyMiddleware({
             const applicationPath = '${applicationPath}';
           </script>
           <script defer="defer" src="${applicationPath}/save-file-manager.js"></script>
+          <script defer="defer" src="${applicationPath}/automations.js"></script>
           </body>
           </html>`)
           ;
@@ -79,4 +80,3 @@ else {
   httpsServer.listen(8010);
   console.log('https proxy server'.blue + ' started '.green.bold + 'on port '.blue + '8010'.yellow);
 }
-
