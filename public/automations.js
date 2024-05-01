@@ -14,6 +14,43 @@
     await sleep(100);
   };
 
+  /*** Horde ***/
+  let hordeHandle;
+  const doHordeActions = async (actionIndexes) => {    
+    await goTo('horde');
+    return new Promise((resolve) => {
+      if (hordeHandle) {
+        clearInterval(hordeHandle);
+      }
+      hordeHandle = setInterval(() => {
+        try {
+          const status = getMain().$children[0].$children.find(c => c.$vnode.tag.includes('status'));
+          const playerCardIndex = status.$children.findIndex(c => c.$el.textContent.toLowerCase().includes('player'));
+          const actionsCard = status.$children[playerCardIndex - 1];
+          const actions = actionsCard.$el.querySelectorAll('span:not([class])');
+          actionIndexes.forEach(actionIndex => {
+            try {
+              const action = actions[actionIndex];
+              const actionBtn = action.querySelector('button');
+              if (actionBtn && !Array.from(actionBtn.classList).includes('selected-primary')) {
+                actionBtn.click();
+              }
+            }
+            catch{}
+          });
+        }
+        catch {
+          if (hordeHandle) {
+            clearInterval(hordeHandle);
+            hordeHandle = null;
+          }
+          resolve();
+        }
+      }, 500);
+    });
+  }
+  /*** End of Horde ***/
+
   /*** School ***/
   const getSchoolGame = () => {
     const school = getMain().$children.find(c => c.$vnode.tag.includes('school'));
@@ -30,8 +67,12 @@
       case 'history':
         subjectIndex = 2;
     }
-    const sujects = getMain().$children[0].$children[0].$children.filter(c => c.$vnode.tag.includes('subject'));
-    sujects[subjectIndex].$el.querySelectorAll('button')[typeIndex].click();
+    let subjects = getMain().$children[0].$children[0].$children.filter(c => c.$vnode.tag.includes('subject'));
+    if (!subjects.length) {
+      //xs display
+      subjects = getMain().$children[0].$children[1].$children.filter(c => c.$vnode.tag.includes('subject'));
+    }
+    subjects[subjectIndex].$el.querySelectorAll('button')[typeIndex].click();
   };
   const doSchoolAction = async (suject, type, solver, loop = true) => {
     try {
@@ -107,6 +148,12 @@
   
   window.onload = async () => {
     const container = document.createElement('div');
+    container.style.cssText = `
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+    `;
     const template = `
     <div>
       <i id="automations-toggle" class="v-icon notranslate mdi mdi-chevron-down theme--dark"></i>
@@ -117,7 +164,16 @@
         <div class="v-card__title pa-2 justify-center">
           <div>Horde</div>
         </div>
-        <div class="pa-2">TBD</p>
+        <div class="pa-2" id="horde-actions">
+          <label><input type="checkbox" />Action 1</label> |
+          <label><input type="checkbox" />Action 2</label> |
+          <label><input type="checkbox" />Action 3</label> |
+          <label><input type="checkbox" />Action 4</label> |
+          <label><input type="checkbox" />Action 5</label>
+          <button id="do-horde-actions" class="v-btn v-btn--is-elevated v-btn--has-bg theme--dark v-size--small primary">
+            <span class="v-btn__content">Automate</span>
+          </button>
+        </p>
       </section>
       <section>
         <div class="v-card__title pa-2 justify-center">
@@ -153,6 +209,16 @@
     container.innerHTML = template.trim();
     await sleep(500);
     getVue().$el.firstChild.appendChild(container);
+    const hordeActionCheckboxes = document.getElementById('horde-actions').querySelectorAll('[type="checkbox"]');
+    document.getElementById('do-horde-actions').addEventListener('click', async () => {
+      const actions = Array.from(hordeActionCheckboxes).reduce((acc, cb, i) => {
+        if (cb.checked) {
+          acc.push(i);
+        }
+        return acc;
+      }, []);
+      await doHordeActions(actions);
+    });
     document.getElementById('math-study').addEventListener('click', async () => await doMath('study'));
     document.getElementById('math-exam').addEventListener('click', async () => await doMath('exam', false));
     document.getElementById('literature-study').addEventListener('click', async () => await doLiterature('study'));
