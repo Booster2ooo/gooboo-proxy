@@ -10,7 +10,7 @@
     const features = menu.$children.find(c => c.$vnode.tag.includes('btn'));
     features.$el.dispatchEvent(new Event('mouseenter'));
     await sleep(100);
-    menu.$children[1].$children[0].$children.find(c => c.$el.textContent.toLowerCase() === area.toLowerCase()).$el.click();
+    menu.$children[1].$children[0].$children.find(c => c.$el.textContent.toLowerCase().includes(area.toLowerCase())).$el.click();
     await sleep(100);
   };
 
@@ -155,8 +155,8 @@
       right: 0;
     `;
     const template = `
-    <div>
-      <i id="automations-toggle" class="v-icon notranslate mdi mdi-chevron-down theme--dark"></i>
+    <div id="automations-toggle">
+      <i class="v-icon notranslate mdi mdi-chevron-down theme--dark"></i>
       <span>Automations</span>
     </div>
     <div id="automations" class="v-card v-sheet theme--dark">
@@ -228,9 +228,10 @@
     const automations = document.getElementById('automations');
     document.getElementById('automations-toggle').addEventListener('click', function(e) {
       const isHidden = automations.classList.contains('d-none');
+      const icon = e.currentTarget.querySelector('i');
       isHidden ? automations.classList.remove('d-none') : automations.classList.add('d-none');
-      e.target.classList.toggle('mdi-chevron-up', !isHidden);
-      e.target.classList.toggle('mdi-chevron-down', isHidden);
+      icon.classList.toggle('mdi-chevron-up', !isHidden);
+      icon.classList.toggle('mdi-chevron-down', isHidden);
     });
   };
 })();
